@@ -1,0 +1,23 @@
+﻿{
+  Diagnostics: [
+    {
+      Location: /*
+
+public partial record Part(int Id);
+                          ^^^^^^^^
+
+*/
+ : (2,26)-(2,34),
+      Message: Record `Part` must not declare a primary constructor,
+      Severity: Error,
+      Descriptor: {
+        Id: FX0001,
+        Title: Record Primary Constructor,
+        MessageFormat: Record `{0}` must not declare a primary constructor,
+        Category: Design,
+        DefaultSeverity: Error,
+        IsEnabledByDefault: true
+      }
+    }
+  ]
+}
