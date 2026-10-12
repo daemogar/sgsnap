@@ -1,4 +1,4 @@
-using Xunit;
+﻿using Xunit;
 
 namespace SGSnap;
 
@@ -7,9 +7,10 @@ internal static class SnapshotHost
 {
 	public static void Run(IReadOnlyList<SnapshotTarget> targets, SnapshotSettings settings, string sourceFile)
 	{
-		var prefix = TestNaming.CurrentPrefix();
-		var directory = SnapshotPaths.ResolveDirectory(settings.Directory, sourceFile);
-		SnapshotClaims.Shared.Claim(directory, prefix, TestContext.Current.Test?.UniqueID ?? prefix);
+		var (className, methodName) = TestNaming.Current();
+		var prefix = $"{className}.{methodName}";
+		var directory = SnapshotPaths.ResolveDirectory(SnapshotPaths.Expand(settings.Directory, className, methodName), sourceFile);
+		SnapshotClaims.Shared.Claim(directory, SnapshotPaths.IsPerTest(settings.Directory) ? null : prefix, prefix, TestContext.Current.Test?.UniqueID ?? prefix);
 		new SnapshotEngine(SnapshotEnvironment.FromProcess(), DiffLauncher.Shared, TestContext.Current.AddWarning)
 			.Run(directory, prefix, targets, settings);
 	}

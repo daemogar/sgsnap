@@ -41,6 +41,25 @@ Snapshot.Match([new SnapshotTarget("txt", summary), new SnapshotTarget("cs", cod
 
 writes `Class.Method.verified.txt` and `Class.Method#Widget.verified.cs`.
 
+### One folder per test
+
+`Directory` takes two placeholders: `{class}` is the test class (`Outer.Inner` when nested) and
+`{method}` is the test method. When `Directory` contains `{method}`, each test has a folder of its
+own, so file names drop the `Class.Method` prefix. A named target becomes `<Name>.verified.<ext>`
+and an unnamed one becomes `snapshot.verified.<ext>`:
+
+```csharp
+new SnapshotSettings { Directory = "Snapshots/{class}/{method}" }
+```
+
+writes `Snapshots/InvoiceTests/Renders_an_invoice/snapshot.verified.txt`. That keeps the test name
+out of the file name a second time, which matters for the path limit described in "Path length".
+
+The folder then belongs to that test. Every `.verified` and `.received` file in it counts as the
+test's own, for stale cleanup and for orphans. A second test pointed at the same folder throws
+`InvalidOperationException`, and so does a test that names its files with a prefix there. A
+`Directory` without `{method}`, `{class}` alone included, keeps the prefixed names.
+
 ### Scrubbers
 
 Replace unstable text before comparing. Scrubbers run in the order added, on every file:
@@ -160,7 +179,8 @@ public Task Generates_the_widget()
 Each generated source becomes `Class.Method#<hint name without its last extension>.verified.cs`
 (`Widget.g.cs` becomes `#Widget.g`), holding `//HintName: <hint>` on the first line and the
 generated text, unchanged, after it. When the run reported diagnostics, they go in
-`Class.Method.verified.txt`. A generator that threw makes the test fail with that exception.
+`Class.Method.verified.txt`. In a folder per test (see "One folder per test"), the files are
+`Widget.g.verified.cs` and `snapshot.verified.txt`. A generator that threw makes the test fail with that exception.
 
 ## Diagnostics format
 
