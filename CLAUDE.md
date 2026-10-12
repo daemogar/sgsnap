@@ -21,5 +21,6 @@ Design notes there may name real systems; nothing under either path is ever comm
 
 ## Testing
 
-xUnit v3 3.2.2 through `Microsoft.NET.Test.Sdk` and `xunit.runner.visualstudio`. Read the
+xUnit v3 4.x on Microsoft.Testing.Platform, opted in by the `test.runner` key in `global.json`.
+The test project is an `Exe` with no `Microsoft.NET.Test.Sdk` or `xunit.runner.visualstudio`. Read the
 reported test count, not the exit code; `SGSnap.Tests/HarnessTests.cs` must stay.

@@ -13,7 +13,7 @@ Licensed under AGPL-3.0-or-later.
 | `SGSnap` | Text, multi-file and in-process CLI snapshots. |
 | `SGSnap.SourceGenerators` | Snapshots of a Roslyn source generator run: every generated file plus its diagnostics. |
 
-Both target `net10.0` and need xUnit v3 (3.2.x).
+Both target `net10.0` and need xUnit v3 4.0.2 or later.
 
 ## Writing a snapshot test
 

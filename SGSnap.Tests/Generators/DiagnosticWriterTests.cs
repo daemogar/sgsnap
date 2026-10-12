@@ -71,7 +71,7 @@ public class DiagnosticWriterTests
 	public void A_multi_line_span_gets_a_caret_row_under_each_line()
 	{
 		const string source = "a\nbcd\nef\ng";
-		var location = Location.Create(CSharpSyntaxTree.ParseText(source), TextSpan.FromBounds(3, 7));
+		var location = Location.Create(CSharpSyntaxTree.ParseText(source, cancellationToken: TestContext.Current.CancellationToken), TextSpan.FromBounds(3, 7));
 
 		var text = Write(Diagnostic.Create(FixtureGenerator.PrimaryConstructor, location, "Part"));
 
