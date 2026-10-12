@@ -224,6 +224,43 @@ public class SnapshotEngineTests
 		h.Run(Local, new SnapshotSettings().AddScrubber(new Regex(@"\d+"), "N"), new SnapshotTarget("txt", "id 42"));
 	}
 
+	static readonly SnapshotSettings PerTest = new() { Directory = "Snapshots/{method}" };
+
+	[Fact]
+	public void A_folder_per_test_drops_the_test_name_from_file_names()
+	{
+		using var h = new Harness();
+
+		h.Run(Local with { Accept = true }, PerTest, new SnapshotTarget("txt", "summary"), new SnapshotTarget("cs", "code", "Widget.g"));
+
+		Assert.Equal(new[] { "Widget.g.verified.cs", "snapshot.verified.txt" }, h.Files());
+	}
+
+	[Fact]
+	public void A_folder_per_test_owns_every_snapshot_file_in_it()
+	{
+		using var h = new Harness();
+		h.Write("snapshot.verified.txt", "same");
+		h.Write("Old.verified.cs", "gone");
+		h.Write("Stale.received.cs", "leftover");
+
+		var error = Assert.Throws<SnapshotMismatchException>(() => h.Run(Local, PerTest, new SnapshotTarget("txt", "same")));
+
+		Assert.Contains("Orphan: " + h.PathOf("Old.verified.cs"), error.Message);
+		Assert.StartsWith("Snapshot mismatch for C.M ", error.Message);
+		Assert.False(File.Exists(h.PathOf("Stale.received.cs")));
+	}
+
+	[Fact]
+	public void A_folder_per_test_rejects_a_target_named_like_the_unnamed_one()
+	{
+		using var h = new Harness();
+
+		var error = Assert.Throws<ArgumentException>(() => h.Run(Local, PerTest, new SnapshotTarget("txt", "a"), new SnapshotTarget("txt", "b", "snapshot")));
+
+		Assert.Contains("snapshot.verified.txt", error.Message);
+	}
+
 	[Fact]
 	public void Every_target_is_compared_before_failing()
 	{

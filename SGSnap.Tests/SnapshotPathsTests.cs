@@ -13,6 +13,38 @@ public class SnapshotPathsTests
 		=> Assert.Equal("C.M#Widget.g.received.cs", SnapshotPaths.FileName("C.M", new SnapshotTarget("cs", "", "Widget.g"), "received"));
 
 	[Fact]
+	public void FileName_without_a_prefix_is_the_name_or_snapshot()
+	{
+		Assert.Equal("Widget.g.verified.cs", SnapshotPaths.FileName(null, new SnapshotTarget("cs", "", "Widget.g"), "verified"));
+		Assert.Equal("snapshot.received.txt", SnapshotPaths.FileName(null, new SnapshotTarget("txt", ""), "received"));
+	}
+
+	[Fact]
+	public void Expand_fills_class_and_method()
+		=> Assert.Equal("Snapshots/Outer.Inner/Run", SnapshotPaths.Expand("Snapshots/{class}/{method}", "Outer.Inner", "Run"));
+
+	[Fact]
+	public void Only_a_method_placeholder_makes_a_folder_per_test()
+	{
+		Assert.True(SnapshotPaths.IsPerTest("Snapshots/{method}"));
+		Assert.False(SnapshotPaths.IsPerTest("Snapshots/{class}"));
+		Assert.False(SnapshotPaths.IsPerTest("Snapshots"));
+		Assert.False(SnapshotPaths.IsPerTest(null));
+	}
+
+	[Fact]
+	public void Find_without_a_prefix_returns_every_file_of_that_kind()
+	{
+		using var temp = new TempDirectory();
+		foreach (var name in new[] { "snapshot.verified.txt", "Widget.g.verified.cs", "C.M#A.verified.cs", "snapshot.received.txt", "notes.md" })
+			File.WriteAllText(temp.File(name), "");
+
+		var found = SnapshotPaths.Find(temp.Path, null, "verified").Select(path => Path.GetFileName(path)!).Order(StringComparer.Ordinal);
+
+		Assert.Equal(new[] { "C.M#A.verified.cs", "Widget.g.verified.cs", "snapshot.verified.txt" }, found);
+	}
+
+	[Fact]
 	public void ResolveDirectory_defaults_to_the_test_file_folder()
 		=> Assert.Equal(Path.Combine(Path.GetTempPath(), "proj"), SnapshotPaths.ResolveDirectory(null, Source));
 

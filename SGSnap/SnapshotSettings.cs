@@ -8,6 +8,7 @@ public sealed class SnapshotSettings
 	readonly List<Func<string, string>> scrubbers = [];
 
 	/// <summary>Snapshot folder: absolute, or relative to the calling test file's folder. Null means that folder itself.</summary>
+	/// <remarks><c>{class}</c> and <c>{method}</c> placeholders; see README.md "One folder per test".</remarks>
 	public string? Directory { get; set; }
 
 	/// <summary>Adds a scrubber. Scrubbers run in the order added, on every target's text.</summary>

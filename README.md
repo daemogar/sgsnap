@@ -41,6 +41,25 @@ Snapshot.Match([new SnapshotTarget("txt", summary), new SnapshotTarget("cs", cod
 
 writes `Class.Method.verified.txt` and `Class.Method#Widget.verified.cs`.
 
+### One folder per test
+
+`Directory` takes two placeholders: `{class}` is the test class (`Outer.Inner` when nested) and
+`{method}` is the test method. When `Directory` contains `{method}`, each test has a folder of its
+own, so file names drop the `Class.Method` prefix. A named target becomes `<Name>.verified.<ext>`
+and an unnamed one becomes `snapshot.verified.<ext>`:
+
+```csharp
+new SnapshotSettings { Directory = "Snapshots/{class}/{method}" }
+```
+
+writes `Snapshots/InvoiceTests/Renders_an_invoice/snapshot.verified.txt`. That keeps the test name
+out of the file name a second time, which matters for the path limit described in "Path length".
+
+The folder then belongs to that test. Every `.verified` and `.received` file in it counts as the
+test's own, for stale cleanup and for orphans. A second test pointed at the same folder throws
+`InvalidOperationException`, and so does a test that names its files with a prefix there. A
+`Directory` without `{method}`, `{class}` alone included, keeps the prefixed names.
+
 ### Scrubbers
 
 Replace unstable text before comparing. Scrubbers run in the order added, on every file:
@@ -67,6 +86,25 @@ and ignore `*.received.*`.
 Snapshots of generated C# end in `.verified.cs`. The `SGSnap` package's build targets remove
 `*.verified.cs` and `*.received.cs` from the test project's compilation, so they never collide
 with real types.
+
+### Path length
+
+Windows cannot check out a path of 260 characters or more unless long paths are turned on, and a
+CI runner usually has them off. A snapshot path that fits on the machine that wrote it can still
+break a Windows checkout later. Every call therefore checks each snapshot path before it compares
+or writes anything. A path that is too long throws `ArgumentException`, which lists each such path
+and its length.
+
+The check measures the path from the repository root, which is the nearest folder above the
+snapshot folder holding `.git` (a folder, or a file in a worktree or submodule). It adds an
+allowance for the folder the repository is checked out into, and the total must be 259 or less.
+The default allowance is the length of a hosted Windows runner's checkout root,
+`D:\a\<repo>\<repo>\`. Here `<repo>` is the repository folder's name, and in a linked worktree it
+is the name of the main checkout's folder. Set a different allowance with `SGSNAP_ROOTLENGTH` or
+`SnapshotDefaults.CheckoutRootLength`. Outside a repository nothing is checked.
+
+To fix a long path, shorten the test class or method name, the snapshot folder, or the target name.
+Each one appears in the path.
 
 ## When a snapshot does not match
 
@@ -124,6 +162,7 @@ tools open per test run (`SGSNAP_MAXLAUNCH`), and none in CI.
 | `SGSNAP_CHECKONLY` | `1` or `true`: compare only; write and open nothing. |
 | `SGSNAP_DIFFTOOL` | Diff command with `{received}` / `{verified}`, or `none`. |
 | `SGSNAP_MAXLAUNCH` | Most diff tools opened per test run. Default 5. |
+| `SGSNAP_ROOTLENGTH` | Checkout-root allowance for the path-length check. Default: `D:\a\<repo>\<repo>\`. |
 | `CI`, `TF_BUILD` | CI is detected when `CI` is `true` or `TF_BUILD` is set: no launches, accept-all ignored. |
 
 ## Generator snapshots
@@ -140,7 +179,8 @@ public Task Generates_the_widget()
 Each generated source becomes `Class.Method#<hint name without its last extension>.verified.cs`
 (`Widget.g.cs` becomes `#Widget.g`), holding `//HintName: <hint>` on the first line and the
 generated text, unchanged, after it. When the run reported diagnostics, they go in
-`Class.Method.verified.txt`. A generator that threw makes the test fail with that exception.
+`Class.Method.verified.txt`. In a folder per test (see "One folder per test"), the files are
+`Widget.g.verified.cs` and `snapshot.verified.txt`. A generator that threw makes the test fail with that exception.
 
 ## Diagnostics format
 

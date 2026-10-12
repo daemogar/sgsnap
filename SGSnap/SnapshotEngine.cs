@@ -8,7 +8,9 @@ internal sealed class SnapshotEngine(SnapshotEnvironment environment, DiffLaunch
 		if (environment.Accept && environment.CheckOnly)
 			throw new InvalidOperationException("SGSNAP_ACCEPT and SGSNAP_CHECKONLY cannot both be set.");
 
-		Validate(targets);
+		var filePrefix = SnapshotPaths.IsPerTest(settings.Directory) ? null : prefix;
+		Validate(targets, filePrefix);
+		CheckoutPaths.Check(directory, targets.Select(target => SnapshotPaths.FileName(filePrefix, target, "verified")), environment.RootLength);
 
 		var accept = environment.Accept && !environment.IsCI;
 		if (environment.Accept && environment.IsCI)
@@ -17,7 +19,7 @@ internal sealed class SnapshotEngine(SnapshotEnvironment environment, DiffLaunch
 		if (!environment.CheckOnly)
 		{
 			Directory.CreateDirectory(directory);
-			foreach (var stale in SnapshotPaths.Find(directory, prefix, "received").ToList())
+			foreach (var stale in SnapshotPaths.Find(directory, filePrefix, "received").ToList())
 				File.Delete(stale);
 		}
 
@@ -27,7 +29,7 @@ internal sealed class SnapshotEngine(SnapshotEnvironment environment, DiffLaunch
 		foreach (var target in targets)
 		{
 			var content = settings.Apply(target.Content);
-			var verifiedPath = Path.Combine(directory, SnapshotPaths.FileName(prefix, target, "verified"));
+			var verifiedPath = Path.Combine(directory, SnapshotPaths.FileName(filePrefix, target, "verified"));
 			produced.Add(verifiedPath);
 
 			var verified = SnapshotText.ReadVerified(verifiedPath);
@@ -44,7 +46,7 @@ internal sealed class SnapshotEngine(SnapshotEnvironment environment, DiffLaunch
 			string? receivedPath = null;
 			if (!environment.CheckOnly)
 			{
-				receivedPath = Path.Combine(directory, SnapshotPaths.FileName(prefix, target, "received"));
+				receivedPath = Path.Combine(directory, SnapshotPaths.FileName(filePrefix, target, "received"));
 				SnapshotText.Write(receivedPath, content);
 			}
 
@@ -53,7 +55,7 @@ internal sealed class SnapshotEngine(SnapshotEnvironment environment, DiffLaunch
 				: new SnapshotFailure(FailureKind.Differs, verifiedPath, receivedPath, LineDiff.Unified(verified, content)));
 		}
 
-		foreach (var orphan in SnapshotPaths.Find(directory, prefix, "verified").Where(path => !produced.Contains(path)).ToList())
+		foreach (var orphan in SnapshotPaths.Find(directory, filePrefix, "verified").Where(path => !produced.Contains(path)).ToList())
 		{
 			if (accept)
 			{
@@ -74,7 +76,7 @@ internal sealed class SnapshotEngine(SnapshotEnvironment environment, DiffLaunch
 		throw new SnapshotMismatchException(SnapshotReport.Format(prefix, failures));
 	}
 
-	static void Validate(IReadOnlyList<SnapshotTarget> targets)
+	static void Validate(IReadOnlyList<SnapshotTarget> targets, string? filePrefix)
 	{
 		if (targets.Count == 0)
 			throw new ArgumentException("At least one snapshot target is required.", nameof(targets));
@@ -88,8 +90,8 @@ internal sealed class SnapshotEngine(SnapshotEnvironment environment, DiffLaunch
 				throw new ArgumentException($"Invalid snapshot extension '{target.Extension}'.", nameof(targets));
 			if (target.Name is { } name && (name.Length == 0 || name.IndexOfAny(invalid) >= 0))
 				throw new ArgumentException($"Invalid snapshot name '{name}'.", nameof(targets));
-			if (!seen.Add(SnapshotPaths.FileName("", target, "verified")))
-				throw new ArgumentException($"Two snapshot targets share the name '{target.Name}' and extension '{target.Extension}'.", nameof(targets));
+			if (!seen.Add(SnapshotPaths.FileName(filePrefix, target, "verified")))
+				throw new ArgumentException($"Two snapshot targets share the file name '{SnapshotPaths.FileName(filePrefix, target, "verified")}'.", nameof(targets));
 		}
 	}
 }

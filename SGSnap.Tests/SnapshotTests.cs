@@ -12,6 +12,12 @@ public class SnapshotTests
 			[new SnapshotTarget("txt", "summary"), new SnapshotTarget("cs", "// generated", "Widget")],
 			new SnapshotSettings { Directory = "Snapshots" });
 
+	[Fact]
+	public Task Writes_into_a_folder_per_test()
+		=> Snapshot.Match(
+			[new SnapshotTarget("txt", "summary"), new SnapshotTarget("cs", "// generated", "Widget")],
+			new SnapshotSettings { Directory = "Snapshots/{class}/{method}" });
+
 	// Throwing (not a faulted Task) makes a call that is not awaited fail the test instead of passing silently.
 	[Fact]
 	public void Failures_throw_instead_of_returning_a_faulted_task()

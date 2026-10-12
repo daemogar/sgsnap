@@ -1,7 +1,7 @@
-namespace SGSnap;
+﻿namespace SGSnap;
 
 /// <summary>The <c>SGSNAP_*</c> variables and CI detection, read once per snapshot call.</summary>
-internal sealed record SnapshotEnvironment(bool Accept, bool CheckOnly, bool IsCI, string? DiffTool, int MaxLaunch)
+internal sealed record SnapshotEnvironment(bool Accept, bool CheckOnly, bool IsCI, string? DiffTool, int MaxLaunch, int? RootLength = null)
 {
 	public static SnapshotEnvironment FromProcess() => From(Environment.GetEnvironmentVariable);
 
@@ -10,7 +10,8 @@ internal sealed record SnapshotEnvironment(bool Accept, bool CheckOnly, bool IsC
 		CheckOnly: IsOn(get("SGSNAP_CHECKONLY")),
 		IsCI: string.Equals(get("CI"), "true", StringComparison.OrdinalIgnoreCase) || !string.IsNullOrEmpty(get("TF_BUILD")),
 		DiffTool: NullIfBlank(get("SGSNAP_DIFFTOOL")) ?? SnapshotDefaults.DiffTool,
-		MaxLaunch: int.TryParse(get("SGSNAP_MAXLAUNCH"), out var max) && max >= 0 ? max : 5);
+		MaxLaunch: int.TryParse(get("SGSNAP_MAXLAUNCH"), out var max) && max >= 0 ? max : 5,
+		RootLength: int.TryParse(get("SGSNAP_ROOTLENGTH"), out var root) && root >= 0 ? root : SnapshotDefaults.CheckoutRootLength);
 
 	static bool IsOn(string? value) => value == "1" || string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
 
