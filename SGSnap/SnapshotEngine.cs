@@ -80,14 +80,15 @@ internal sealed class SnapshotEngine(SnapshotEnvironment environment, DiffLaunch
 			throw new ArgumentException("At least one snapshot target is required.", nameof(targets));
 
 		var invalid = Path.GetInvalidFileNameChars();
-		var seen = new HashSet<string>(SnapshotPaths.PathComparer);
+		// Case-insensitive on every OS: names committed on Linux must still check out side by side on Windows.
+		var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 		foreach (var target in targets)
 		{
-			if (string.IsNullOrWhiteSpace(target.Extension) || target.Extension.StartsWith('.') || target.Extension.IndexOfAny(invalid) >= 0)
+			if (string.IsNullOrWhiteSpace(target.Extension) || target.Extension.Contains('.') || target.Extension.IndexOfAny(invalid) >= 0)
 				throw new ArgumentException($"Invalid snapshot extension '{target.Extension}'.", nameof(targets));
 			if (target.Name is { } name && (name.Length == 0 || name.IndexOfAny(invalid) >= 0))
 				throw new ArgumentException($"Invalid snapshot name '{name}'.", nameof(targets));
-			if (!seen.Add($"{target.Name}|{target.Extension}"))
+			if (!seen.Add(SnapshotPaths.FileName("", target, "verified")))
 				throw new ArgumentException($"Two snapshot targets share the name '{target.Name}' and extension '{target.Extension}'.", nameof(targets));
 		}
 	}

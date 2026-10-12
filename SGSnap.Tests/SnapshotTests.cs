@@ -12,12 +12,17 @@ public class SnapshotTests
 			[new SnapshotTarget("txt", "summary"), new SnapshotTarget("cs", "// generated", "Widget")],
 			new SnapshotSettings { Directory = "Snapshots" });
 
+	// Throwing (not a faulted Task) makes a call that is not awaited fail the test instead of passing silently.
 	[Fact]
-	public void Failures_come_back_as_a_faulted_task()
-	{
-		var task = Snapshot.Match([], new SnapshotSettings { Directory = "Snapshots" });
+	public void Failures_throw_instead_of_returning_a_faulted_task()
+		=> Assert.Throws<ArgumentException>(() => { _ = Snapshot.Match([], new SnapshotSettings { Directory = "Snapshots" }); });
 
-		Assert.True(task.IsFaulted);
-		Assert.IsType<ArgumentException>(task.Exception!.InnerException);
+	[Fact]
+	public async Task A_second_call_in_one_test_is_rejected()
+	{
+		await Snapshot.Match("one", new SnapshotSettings { Directory = "Snapshots" });
+
+		var error = Assert.Throws<InvalidOperationException>(() => { _ = Snapshot.Match("two", new SnapshotSettings { Directory = "Snapshots" }); });
+		Assert.Contains("more than once", error.Message);
 	}
 }

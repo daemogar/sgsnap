@@ -45,6 +45,16 @@ public class SnapshotPathsTests
 	}
 
 	[Fact]
+	public void Find_matches_the_kind_only_as_the_suffix_before_the_extension()
+	{
+		using var temp = new TempDirectory();
+		File.WriteAllText(temp.File("C.M#Snapshot.received.g.verified.cs"), "");
+
+		Assert.Empty(SnapshotPaths.Find(temp.Path, "C.M", "received"));
+		Assert.Single(SnapshotPaths.Find(temp.Path, "C.M", "verified"));
+	}
+
+	[Fact]
 	public void Find_in_a_missing_folder_is_empty()
 		=> Assert.Empty(SnapshotPaths.Find(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")), "C.M", "verified"));
 }

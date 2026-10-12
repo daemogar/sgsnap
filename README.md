@@ -80,6 +80,14 @@ Every file of the call is compared first; then one failure lists them all.
 
 Stale `.received` files for the test are deleted at the start of every run.
 
+A mismatch throws `SnapshotMismatchException` directly instead of returning a faulted task, so a
+call someone forgot to `await` still fails the test.
+
+Each test gets one snapshot file set, so make **one** `Match` call per test; pass several targets
+to one call when a test has several outputs. A second call in the same test, or a `[Theory]`
+whose rows share one snapshot name, throws `InvalidOperationException` instead of letting the
+calls overwrite or delete each other's files.
+
 ### Accepting changes
 
 Accept in the diff tool, or rename `.received` to `.verified`. The failure message prints the

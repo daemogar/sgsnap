@@ -26,14 +26,16 @@ internal static class SnapshotPaths
 		if (!Directory.Exists(directory))
 			return [];
 
-		var plain = $"{prefix}.{kind}.";
-		var named = $"{prefix}#";
-		var marker = $".{kind}.";
+		// The kind must sit right before the extension, so a name that merely contains ".received." never matches.
+		var suffix = $".{kind}";
 		return Directory.EnumerateFiles(directory).Where(path =>
 		{
-			var name = Path.GetFileName(path);
-			return name.StartsWith(plain, StringComparison.Ordinal)
-				|| (name.StartsWith(named, StringComparison.Ordinal) && name.Contains(marker, StringComparison.Ordinal));
+			var stem = Path.GetFileNameWithoutExtension(path);
+			if (!stem.EndsWith(suffix, StringComparison.Ordinal))
+				return false;
+
+			var owner = stem[..^suffix.Length];
+			return owner == prefix || owner.StartsWith($"{prefix}#", StringComparison.Ordinal);
 		});
 	}
 }

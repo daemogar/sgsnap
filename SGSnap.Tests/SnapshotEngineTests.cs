@@ -189,6 +189,33 @@ public class SnapshotEngineTests
 	}
 
 	[Fact]
+	public void Names_differing_only_in_case_are_rejected_on_every_os()
+	{
+		using var h = new Harness();
+
+		Assert.Throws<ArgumentException>(() => h.Run(Local, new SnapshotTarget("cs", "a", "Widget"), new SnapshotTarget("cs", "b", "widget")));
+	}
+
+	[Fact]
+	public void An_extension_with_a_dot_is_rejected()
+	{
+		using var h = new Harness();
+
+		Assert.Throws<ArgumentException>(() => h.Run(Local, new SnapshotTarget("verified.txt", "a", "W")));
+	}
+
+	[Fact]
+	public void Stale_cleanup_keeps_a_verified_file_whose_name_contains_received()
+	{
+		using var h = new Harness();
+		h.Write("C.M#Snapshot.received.g.verified.cs", "x");
+
+		h.Run(Local, new SnapshotTarget("cs", "x", "Snapshot.received.g"));
+
+		Assert.Equal(new[] { "C.M#Snapshot.received.g.verified.cs" }, h.Files());
+	}
+
+	[Fact]
 	public void Scrubbers_apply_before_the_comparison()
 	{
 		using var h = new Harness();
