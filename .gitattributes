@@ -1,0 +1,4 @@
+# Snapshot files are written with LF and compared after line-ending normalization.
+# The repo default is CRLF (.editorconfig), so pin them or autocrlf rewrites them on checkout.
+*.verified.* text eol=lf
+*.received.* text eol=lf

@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="SGSnap/SGSnap.csproj" />
+  <Project Path="SGSnap.Tests/SGSnap.Tests.csproj" />
+</Solution>
