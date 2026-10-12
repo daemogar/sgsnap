@@ -64,6 +64,10 @@ failure. Pin the files to LF in `.gitattributes`:
 
 and ignore `*.received.*`.
 
+Snapshots of generated C# end in `.verified.cs`. The `SGSnap` package's build targets remove
+`*.verified.cs` and `*.received.cs` from the test project's compilation, so they never collide
+with real types.
+
 ## When a snapshot does not match
 
 Every file of the call is compared first; then one failure lists them all.

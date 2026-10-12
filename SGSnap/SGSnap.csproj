@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <None Include="../README.md" Pack="true" PackagePath="/" />
+    <None Include="buildTransitive/SGSnap.targets" Pack="true" PackagePath="buildTransitive/" />
     <InternalsVisibleTo Include="SGSnap.Tests" />
   </ItemGroup>
 

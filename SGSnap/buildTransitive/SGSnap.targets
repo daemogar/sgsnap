@@ -1,0 +1,9 @@
+<Project>
+
+  <!-- Snapshot files can hold C# text (.verified.cs); keep them out of the consuming project's compilation. -->
+  <ItemGroup>
+    <Compile Remove="**/*.verified.cs" />
+    <Compile Remove="**/*.received.cs" />
+  </ItemGroup>
+
+</Project>

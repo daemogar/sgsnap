@@ -26,6 +26,9 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <!-- A project reference gets no package build assets, so import the snapshot exclusions directly. -->
+  <Import Project="../SGSnap/buildTransitive/SGSnap.targets" />
+
   <ItemGroup>
     <ProjectReference Include="../SGSnap/SGSnap.csproj" />
     <ProjectReference Include="../SGSnap.SourceGenerators/SGSnap.SourceGenerators.csproj" />
