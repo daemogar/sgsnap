@@ -9,6 +9,7 @@ internal sealed class SnapshotEngine(SnapshotEnvironment environment, DiffLaunch
 			throw new InvalidOperationException("SGSNAP_ACCEPT and SGSNAP_CHECKONLY cannot both be set.");
 
 		Validate(targets);
+		CheckoutPaths.Check(directory, targets.Select(target => SnapshotPaths.FileName(prefix, target, "verified")), environment.RootLength);
 
 		var accept = environment.Accept && !environment.IsCI;
 		if (environment.Accept && environment.IsCI)

@@ -68,6 +68,25 @@ Snapshots of generated C# end in `.verified.cs`. The `SGSnap` package's build ta
 `*.verified.cs` and `*.received.cs` from the test project's compilation, so they never collide
 with real types.
 
+### Path length
+
+Windows cannot check out a path of 260 characters or more unless long paths are turned on, and a
+CI runner usually has them off. A snapshot path that fits on the machine that wrote it can still
+break a Windows checkout later. Every call therefore checks each snapshot path before it compares
+or writes anything. A path that is too long throws `ArgumentException`, which lists each such path
+and its length.
+
+The check measures the path from the repository root, which is the nearest folder above the
+snapshot folder holding `.git` (a folder, or a file in a worktree or submodule). It adds an
+allowance for the folder the repository is checked out into, and the total must be 259 or less.
+The default allowance is the length of a hosted Windows runner's checkout root,
+`D:\a\<repo>\<repo>\`. Here `<repo>` is the repository folder's name, and in a linked worktree it
+is the name of the main checkout's folder. Set a different allowance with `SGSNAP_ROOTLENGTH` or
+`SnapshotDefaults.CheckoutRootLength`. Outside a repository nothing is checked.
+
+To fix a long path, shorten the test class or method name, the snapshot folder, or the target name.
+Each one appears in the path.
+
 ## When a snapshot does not match
 
 Every file of the call is compared first; then one failure lists them all.
@@ -124,6 +143,7 @@ tools open per test run (`SGSNAP_MAXLAUNCH`), and none in CI.
 | `SGSNAP_CHECKONLY` | `1` or `true`: compare only; write and open nothing. |
 | `SGSNAP_DIFFTOOL` | Diff command with `{received}` / `{verified}`, or `none`. |
 | `SGSNAP_MAXLAUNCH` | Most diff tools opened per test run. Default 5. |
+| `SGSNAP_ROOTLENGTH` | Checkout-root allowance for the path-length check. Default: `D:\a\<repo>\<repo>\`. |
 | `CI`, `TF_BUILD` | CI is detected when `CI` is `true` or `TF_BUILD` is set: no launches, accept-all ignored. |
 
 ## Generator snapshots

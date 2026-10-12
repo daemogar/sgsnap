@@ -47,6 +47,22 @@ public class SnapshotEnvironmentTests
 	}
 
 	[Fact]
+	public void Environment_root_length_overrides_the_code_level_default()
+	{
+		SnapshotDefaults.CheckoutRootLength = 30;
+		try
+		{
+			Assert.Equal(12, From(("SGSNAP_ROOTLENGTH", "12")).RootLength);
+			Assert.Equal(30, From(("SGSNAP_ROOTLENGTH", "-1")).RootLength);
+			Assert.Equal(30, From().RootLength);
+		}
+		finally
+		{
+			SnapshotDefaults.CheckoutRootLength = null;
+		}
+	}
+
+	[Fact]
 	public void Max_launch_parses_or_falls_back_to_5()
 	{
 		Assert.Equal(5, From(("SGSNAP_MAXLAUNCH", "many")).MaxLaunch);
