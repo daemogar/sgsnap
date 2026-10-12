@@ -22,4 +22,20 @@ public static class Snapshot
 			return Task.FromException(exception);
 		}
 	}
+
+	/// <summary>Runs <paramref name="run"/> in-process and snapshots its exit code, stdout, stderr and the files it wrote under <paramref name="filesRoot"/>.</summary>
+	public static Task MatchCli(Func<TextWriter, TextWriter, int> run, SnapshotSettings? settings = null, string? filesRoot = null, [CallerFilePath] string sourceFile = "")
+	{
+		string text;
+		try
+		{
+			text = CliCapture.Render(run, filesRoot);
+		}
+		catch (Exception exception)
+		{
+			return Task.FromException(exception);
+		}
+
+		return Match(text, settings, "txt", sourceFile);
+	}
 }
