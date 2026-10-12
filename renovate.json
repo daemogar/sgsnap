@@ -11,11 +11,6 @@
       "groupName": "all dependencies",
       "groupSlug": "all-dependencies",
       "automerge": true
-    },
-    {
-      "description": "xunit.v3 stays on 3.x until the test platform migration is planned.",
-      "matchPackageNames": ["xunit.v3", "xunit.v3.extensibility.core"],
-      "allowedVersions": "<4.0.0"
     }
   ],
   "platformAutomerge": true,
